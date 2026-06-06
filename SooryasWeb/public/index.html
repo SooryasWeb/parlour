@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#a72349" />
+    <title>SooryasWeb — Parlour OS</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <!-- Premium Login Interface -->
+    <div id="login-view" class="login-view">
+      <main class="login-card">
+        <header class="login-header">
+          <div class="brand-mark" aria-hidden="true">S</div>
+          <h2 id="login-title">SooryasWeb Login</h2>
+          <p id="login-subtitle">Salon Operating System</p>
+        </header>
+        <form id="login-form" class="form" aria-labelledby="login-title">
+          <label for="login-username">
+            Username
+            <input type="text" id="login-username" name="username" required autocomplete="username" />
+          </label>
+          <label for="login-password">
+            Password
+            <input type="password" id="login-password" name="password" required autocomplete="current-password" />
+          </label>
+          <button class="primary" type="submit" id="btn-login">Sign In</button>
+        </form>
+      </main>
+    </div>
+
+    <!-- Main Application Shell (hidden by default until auth completes) -->
+    <div id="app-container" class="app-shell" style="display: none;">
+      <aside class="sidebar">
+        <div>
+          <div class="brand">
+            <div class="brand-mark" aria-hidden="true">S</div>
+            <div>
+              <strong id="sidebar-brand-name">Soorya's</strong>
+              <span id="sidebar-brand-sub">Parlour OS</span>
+            </div>
+          </div>
+          <nav class="nav" aria-label="Main Navigation">
+            <button class="nav-item active" id="nav-dashboard" data-view="dashboard">
+              <span aria-hidden="true">📊</span> <span class="nav-text" id="nav-text-dashboard">Dashboard</span>
+            </button>
+            <button class="nav-item" id="nav-bookings" data-view="bookings">
+              <span aria-hidden="true">📅</span> <span class="nav-text" id="nav-text-bookings">Bookings</span>
+            </button>
+            <button class="nav-item" id="nav-customers" data-view="customers">
+              <span aria-hidden="true">👤</span> <span class="nav-text" id="nav-text-customers">Customers CRM</span>
+            </button>
+            <button class="nav-item" id="nav-billing" data-view="billing">
+              <span aria-hidden="true">🧾</span> <span class="nav-text" id="nav-text-billing">Invoices & Billing</span>
+            </button>
+            <button class="nav-item" id="nav-staff" data-view="staff">
+              <span aria-hidden="true">✂️</span> <span class="nav-text" id="nav-text-staff">Staff & Commission</span>
+            </button>
+            <button class="nav-item" id="nav-inventory" data-view="inventory">
+              <span aria-hidden="true">🧴</span> <span class="nav-text" id="nav-text-inventory">Inventory</span>
+            </button>
+          </nav>
+        </div>
+
+        <footer class="sidebar-footer">
+          <div class="user-profile">
+            <div class="avatar" id="user-avatar" aria-hidden="true">U</div>
+            <div class="user-info">
+              <strong id="user-display-name">Username</strong>
+              <span id="user-display-role">Role</span>
+            </div>
+          </div>
+          <button class="logout-button" id="btn-logout">
+            <span aria-hidden="true">🚪</span> <span id="logout-text">Log Out</span>
+          </button>
+        </footer>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="top-eyebrow">Kumarapuram, Thiruvananthapuram</p>
+            <h1 id="page-title">Dashboard</h1>
+          </div>
+          <div class="top-actions">
+            <!-- Bilingual English / Malayalam dynamic switch -->
+            <div class="lang-toggle-container" aria-label="Language Selector">
+              <span class="lang-label active" id="lang-en-label">EN</span>
+              <label class="toggle-switch" for="lang-toggle">
+                <input type="checkbox" id="lang-toggle" />
+                <span class="slider"></span>
+              </label>
+              <span class="lang-label" id="lang-ml-label">മലയാളം</span>
+            </div>
+            <button class="refresh-btn" id="refresh-button" title="Refresh data" aria-label="Refresh Data">🔄</button>
+            <span class="status-pill success" id="health-pill">ONLINE</span>
+          </div>
+        </header>
+
+        <!-- 1. DASHBOARD VIEW -->
+        <section id="view-dashboard" class="view active" aria-labelledby="page-title">
+          <div class="kpi-grid">
+            <article class="kpi">
+              <span id="kpi-lbl-bookings">Today's Bookings</span>
+              <strong id="kpi-val-bookings">0</strong>
+            </article>
+            <article class="kpi">
+              <span id="kpi-lbl-revenue">Today's Revenue</span>
+              <strong id="kpi-val-revenue">INR 0</strong>
+            </article>
+            <article class="kpi">
+              <span id="kpi-lbl-customers">Registered Clients</span>
+              <strong id="kpi-val-customers">0</strong>
+            </article>
+          </div>
+
+          <div class="split-grid">
+            <section class="panel">
+              <h2 id="dash-inventory-alerts-title">Low Stock Alerts</h2>
+              <div id="dashboard-stock-list" class="inventory-list">
+                <!-- Dynamic low stock list -->
+              </div>
+            </section>
+
+            <section class="panel">
+              <h2 id="dash-schedule-title">Today's Schedule</h2>
+              <div id="dashboard-schedule-list" class="list">
+                <!-- Dynamic bookings list -->
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <!-- 2. BOOKINGS VIEW -->
+        <section id="view-bookings" class="view" aria-labelledby="nav-text-bookings">
+          <div class="work-grid">
+            <form class="panel form" id="booking-form" aria-labelledby="form-booking-title">
+              <h2 id="form-booking-title">New Booking</h2>
+              
+              <label for="booking-customer-id">
+                Select Customer
+                <select id="booking-customer-id" name="customerId" required></select>
+              </label>
+
+              <label for="booking-service-id">
+                Select Service
+                <select id="booking-service-id" name="serviceId" required></select>
+              </label>
+
+              <label for="booking-staff-id">
+                Assign Stylist/Staff
+                <select id="booking-staff-id" name="staffId" required></select>
+              </label>
+
+              <div class="field-row">
+                <label for="booking-date">
+                  Date
+                  <input type="date" id="booking-date" name="date" required />
+                </label>
+                <label for="booking-chair-id">
+                  Chair / Station
+                  <select id="booking-chair-id" name="chairId" required>
+                    <option value="chair-1">Chair 1</option>
+                    <option value="chair-2">Chair 2</option>
+                    <option value="chair-3">Chair 3</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="field-row">
+                <label for="booking-start-time">
+                  Start Time
+                  <input type="time" id="booking-start-time" name="startTime" required />
+                </label>
+                <label for="booking-end-time">
+                  End Time
+                  <input type="time" id="booking-end-time" name="endTime" required />
+                </label>
+              </div>
+
+              <label for="booking-notes">
+                Special Notes
+                <textarea id="booking-notes" name="notes" rows="2"></textarea>
+              </label>
+
+              <button class="primary" type="submit" id="btn-save-booking">Book Appointment</button>
+            </form>
+
+            <section class="panel">
+              <h2 id="bookings-board-title">Appointments Board</h2>
+              <div id="bookings-list" class="list"></div>
+            </section>
+          </div>
+        </section>
+
+        <!-- 3. CUSTOMERS CRM VIEW -->
+        <section id="view-customers" class="view" aria-labelledby="nav-text-customers">
+          <div class="work-grid">
+            <form class="panel form" id="customer-form" aria-labelledby="form-customer-title">
+              <h2 id="form-customer-title">Add Customer</h2>
+
+              <label for="customer-name">
+                Full Name
+                <input type="text" id="customer-name" name="name" required placeholder="e.g. Meera Nair" />
+              </label>
+
+              <div class="field-row country-phone-row">
+                <label for="customer-country-code">
+                  Country Code
+                  <input type="text" id="customer-country-code" name="countryCode" required value="+91" maxlength="4" pattern="^\+[0-9]{1,3}$" inputmode="tel" />
+                </label>
+
+                <label for="customer-phone">
+                  Contact Phone
+                  <input type="tel" id="customer-phone" name="phone" required placeholder="e.g. 9847011111" inputmode="numeric" minlength="10" maxlength="10" pattern="[0-9]{10}" />
+                </label>
+              </div>
+
+              <label for="customer-email">
+                Email Address (Optional)
+                <input type="email" id="customer-email" name="email" placeholder="e.g. name@example.com" />
+              </label>
+
+              <label for="customer-consent-status">
+                Consent / Policies Form
+                <select id="customer-consent-status" name="consentStatus">
+                  <option value="unsigned">Unsigned (Pending Review)</option>
+                  <option value="signed">Signed / Agreed</option>
+                </select>
+              </label>
+
+              <label class="checkbox-row" for="customer-whatsapp-consent">
+                <input type="checkbox" id="customer-whatsapp-consent" name="whatsappConsent" value="true" />
+                Customer consents to reminders and invoices via WhatsApp
+              </label>
+
+              <label for="customer-notes">
+                Preferences / Allergies (Basic Notes)
+                <textarea id="customer-notes" name="notes" rows="3" placeholder="Preferences, allergies, sensitive skins..."></textarea>
+              </label>
+
+              <button class="primary" type="submit" id="btn-save-customer">Save Customer</button>
+            </form>
+
+            <section class="panel">
+              <h2 id="customers-list-title">Client Records</h2>
+              <div id="customers-list" class="list"></div>
+            </section>
+          </div>
+        </section>
+
+        <!-- 4. INVOICES & BILLING VIEW -->
+        <section id="view-billing" class="view" aria-labelledby="nav-text-billing">
+          <div class="work-grid">
+            <form class="panel form" id="invoice-form" aria-labelledby="form-invoice-title">
+              <h2 id="form-invoice-title">Generate Invoice</h2>
+
+              <label for="invoice-customer-id">
+                Select Customer
+                <select id="invoice-customer-id" name="customerId" required></select>
+              </label>
+
+              <div id="invoice-items-container">
+                <label for="invoice-item-service">
+                  Select Completed Service
+                  <select id="invoice-item-service" name="serviceId" class="invoice-item-service-select" required></select>
+                </label>
+              </div>
+
+              <div class="field-row">
+                <label for="invoice-discount">
+                  Discount Amount (INR)
+                  <input type="number" id="invoice-discount" name="discountTotal" value="0" min="0" />
+                </label>
+              </div>
+
+              <button class="primary" type="submit" id="btn-generate-invoice">Generate Bill</button>
+            </form>
+
+            <section class="panel">
+              <h2 id="invoices-board-title">Invoices History</h2>
+              <div id="invoices-list" class="list"></div>
+            </section>
+          </div>
+        </section>
+
+        <!-- 5. STAFF & COMMISSIONS VIEW -->
+        <section id="view-staff" class="view" aria-labelledby="nav-text-staff">
+          <div class="work-grid">
+            <form class="panel form" id="staff-form" aria-labelledby="form-staff-title">
+              <h2 id="form-staff-title">Add Staff Member</h2>
+
+              <label for="staff-name">
+                Name
+                <input type="text" id="staff-name" name="name" required />
+              </label>
+
+              <div class="field-row country-phone-row">
+                <label for="staff-country-code">
+                  Country Code
+                  <input type="text" id="staff-country-code" name="countryCode" required value="+91" maxlength="4" pattern="^\+[0-9]{1,3}$" inputmode="tel" />
+                </label>
+
+                <label for="staff-phone">
+                  Phone
+                  <input type="tel" id="staff-phone" name="phone" required placeholder="e.g. 9847011111" inputmode="numeric" minlength="10" maxlength="10" pattern="[0-9]{10}" />
+                </label>
+              </div>
+
+              <label for="staff-role">
+                Job Role
+                <select id="staff-role" name="role" required>
+                  <option value="stylist">Hair Stylist</option>
+                  <option value="beautician">Beautician</option>
+                  <option value="therapist">Masseuse / Therapist</option>
+                </select>
+              </label>
+
+              <div class="field-row">
+                <label for="staff-commission-type">
+                  Commission Model
+                  <select id="staff-commission-type" name="commissionType" required>
+                    <option value="percentage">Percentage (%)</option>
+                    <option value="fixed">Fixed Flat Rate (INR)</option>
+                  </select>
+                </label>
+                <label for="staff-commission-val">
+                  Rule Value
+                  <input type="number" id="staff-commission-val" name="commissionValue" step="1" min="0" max="33" required />
+                </label>
+              </div>
+
+              <button class="primary" type="submit" id="btn-save-staff">Onboard Staff</button>
+            </form>
+
+            <section class="panel">
+              <h2 id="staff-commissions-title">Commission Ledger</h2>
+              <div id="staff-list" class="list"></div>
+            </section>
+          </div>
+        </section>
+
+        <!-- 6. INVENTORY VIEW -->
+        <section id="view-inventory" class="view" aria-labelledby="nav-text-inventory">
+          <div class="work-grid">
+            <form class="panel form" id="inventory-form" aria-labelledby="form-inventory-title">
+              <h2 id="form-inventory-title">Add Inventory Item</h2>
+
+              <label for="inventory-name">
+                Item / Product Name
+                <input type="text" id="inventory-name" name="name" required placeholder="e.g. Organic Shampoo" />
+              </label>
+
+              <label for="inventory-type">
+                Item Type
+                <select id="inventory-type" name="type" required>
+                  <option value="retail">Retail (Sales to Clients)</option>
+                  <option value="consumable">Consumable (Backbar Usage)</option>
+                </select>
+              </label>
+
+              <div class="field-row">
+                <label for="inventory-qty">
+                  Starting Quantity
+                  <input type="number" id="inventory-qty" name="stockQuantity" min="0" required />
+                </label>
+                <label for="inventory-reorder">
+                  Reorder Threshold
+                  <input type="number" id="inventory-reorder" name="reorderLevel" value="5" min="0" required />
+                </label>
+              </div>
+
+              <label for="inventory-vendor">
+                Vendor Name
+                <input type="text" id="inventory-vendor" name="vendorName" placeholder="e.g. BioBeauty Ltd" />
+              </label>
+
+              <button class="primary" type="submit" id="btn-save-inventory">Add to Stock</button>
+            </form>
+
+            <section class="panel">
+              <h2 id="inventory-stock-title">Stock Catalog</h2>
+              <div id="inventory-list" class="list"></div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Toast Component -->
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <!-- Modal for Payment Log -->
+    <dialog id="payment-modal" class="login-card" style="display: none; border: 1px solid var(--border-glass-focus); position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050;">
+      <h2>Log Payment</h2>
+      <form id="payment-form" class="form">
+        <input type="hidden" id="payment-invoice-id" />
+        <label for="payment-amount">
+          Amount to Pay (INR)
+          <input type="number" id="payment-amount" readonly required />
+        </label>
+        <label for="payment-mode">
+          Payment Mode
+          <select id="payment-mode" required>
+            <option value="UPI">UPI / GPay / PhonePe</option>
+            <option value="card">Credit/Debit Card</option>
+            <option value="cash">Cash</option>
+          </select>
+        </label>
+        <label for="payment-reference">
+          Reference Number (Optional)
+          <input type="text" id="payment-reference" placeholder="e.g. Transaction Ref ID" />
+        </label>
+        <div class="field-row">
+          <button class="primary" type="submit" id="btn-confirm-payment">Confirm Payment</button>
+          <button class="secondary-btn" type="button" id="btn-close-payment-modal">Cancel</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

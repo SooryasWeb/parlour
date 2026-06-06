@@ -1,0 +1,260 @@
+version: "2.0"
+project: "lifefil-salon-platform"
+scope: "sooryasweb-parlour-app"
+authority: "docs/BRD.md"
+backlog_source: "docs/user-stories.md"
+description: >
+  Deterministic service/workstream manifest for the SooryasWeb Parlour App.
+  Phase 1 uses explicit code, rules, tests, and manual workflows. It does not
+  use OpenAI API calls, LLM agents, paid WhatsApp APIs, online payment
+  gateways, customer self-booking, or hidden Institute modules.
+
+global_policy:
+  tenant_isolation: true
+  staff_only_booking: true
+  customer_self_booking: false
+  whatsapp_manual_links_only: true
+  paid_whatsapp_api: false
+  online_payment_gateway: false
+  invoice_mandatory_for_completed_billable_services: true
+  payments_collected_at_premises: true
+  standardized_invoice_template: true
+  tenant_custom_logo_allowed: true
+  audit_every_business_write: true
+  manual_override_requires_reason: true
+  no_cross_tenant_access: true
+  auth_provider: "supabase-auth-google"
+  invite_only_auth: true
+  public_self_registration: false
+  no_llm_in_phase_1: true
+  no_institute_features_in_this_repo: true
+  institute_app_repository: "separate"
+  institute_app_database: "separate-postgresql"
+  customer_notes_policy: "basic_operational_notes_only"
+  destructive_db_reset_requires_suffix: "_test"
+
+shared_services:
+  booking_api:
+    description: "Create, update, cancel, reschedule, complete, no-show, and query staff-managed bookings."
+    operations: ["create", "update", "reschedule", "cancel", "complete", "no_show", "get", "list"]
+  customer_api:
+    description: "Read and update customer profile, preferences, tags, basic notes, and consent records."
+    operations: ["create", "get", "list", "update_profile", "update_note", "update_consent"]
+  staff_api:
+    description: "Manage staff profiles, roles, active status, availability, and commission rule references."
+    operations: ["create", "get", "list", "update", "availability"]
+  service_api:
+    description: "Manage service catalogue, duration, pricing, tax class, and active status."
+    operations: ["create", "get", "list", "update", "deactivate"]
+  chair_api:
+    description: "Manage active chairs/stations used by booking conflict checks."
+    operations: ["create", "get", "list", "update", "deactivate"]
+  invoice_api:
+    description: "Create invoices, allocate race-safe invoice numbers, retrieve invoice records, and produce print/share data."
+    operations: ["create", "get", "list", "print_view", "share_summary"]
+  payment_api:
+    description: "Record manual at-premises payment mode, amount, reference, and payment date."
+    operations: ["create", "get", "list", "reconcile"]
+  whatsapp_link_service:
+    description: "Generate deterministic URL-encoded wa.me links and optional message-intent logs."
+    operations: ["booking_confirmation_link", "invoice_share_link", "log_intent"]
+  inventory_api:
+    description: "Track inventory items, stock movements, reorder thresholds, and low-stock alerts."
+    operations: ["create", "get", "list", "movement", "adjust", "low_stock_alerts"]
+  commission_api:
+    description: "Calculate, store, review, and override staff commissions with versioned rules."
+    operations: ["calculate", "get", "list", "override_request"]
+  analytics_api:
+    description: "Generate tenant-scoped KPIs, dashboard alerts, and date-range reports."
+    operations: ["dashboard", "sales_report", "payment_report", "staff_report", "inventory_report"]
+  tenant_api:
+    description: "Manage tenant profile, branding, optional GSTIN, and future subdomain settings."
+    operations: ["get_tenant", "update_profile", "update_branding", "list_tenants"]
+  audit_api:
+    description: "Record append-only audit events and retrieve audit history."
+    operations: ["log_event", "get_audit", "list_audit"]
+  policy_engine:
+    description: "Evaluate tenant scope, role permissions, workflow rules, and privacy guardrails."
+    operations: ["check", "authorize", "validate"]
+  auth_service:
+    description: "Map Supabase Auth Google identities to approved tenant users, roles, and app sessions."
+    operations: ["google_callback", "resolve_user", "create_invite", "disable_user", "audit_auth_event"]
+
+workstreams:
+  - name: requirements_traceability
+    purpose: "Keep BRD, user stories, execution map, and test priorities aligned."
+    priority: "must"
+    story_ids: ["US-SCOPE-01"]
+    owns:
+      - "docs/user-stories.md"
+      - "docs/requirements-execution-map.md"
+      - "docs/testing.md"
+    guardrails:
+      - "docs/BRD.md is authoritative."
+      - "No Institute implementation instructions in this repo."
+      - "Every Phase 1 BRD item must map to at least one story ID."
+
+  - name: data_model
+    purpose: "Provide safe PostgreSQL schema, migrations, seed data, tenant scope, and DB reset guard."
+    priority: "must"
+    story_ids: ["US-AUTH-03", "US-DEP-02"]
+    services: ["tenant_api", "audit_api", "policy_engine"]
+    guardrails:
+      - "Every tenant-owned record is scoped by tenant_id."
+      - "Destructive reset requires database name ending in _test."
+      - "Use migrations for deployment; do not run reset SQL against live data."
+
+  - name: auth_rbac
+    purpose: "Protect Supabase Google sessions, API actions, and role-aware navigation."
+    priority: "must"
+    story_ids: ["US-AUTH-01", "US-AUTH-02", "US-AUTH-04"]
+    services: ["auth_service", "policy_engine", "audit_api"]
+    guardrails:
+      - "Production login uses Supabase Auth with Google provider."
+      - "Only active approved user/invite emails can receive usable portal access."
+      - "Signed HTTP-only session cookies where app sessions are used."
+      - "UI permissions and API permissions use the same policy model."
+      - "Forbidden actions fail server-side."
+
+  - name: parlour_operations
+    purpose: "Run staff-managed bookings, CRM, services, staff, and chair/station workflows."
+    priority: "must"
+    story_ids:
+      - "US-BK-01"
+      - "US-BK-02"
+      - "US-BK-03"
+      - "US-BK-04"
+      - "US-CRM-01"
+      - "US-CRM-02"
+      - "US-CRM-03"
+      - "US-SVC-01"
+      - "US-SVC-02"
+      - "US-SVC-03"
+    services: ["booking_api", "customer_api", "staff_api", "service_api", "chair_api", "audit_api", "policy_engine"]
+    guardrails:
+      - "Customer self-booking is disabled."
+      - "Booking conflict checks include staff and chair/station."
+      - "Customer notes remain basic and operational."
+
+  - name: billing_payments
+    purpose: "Generate invoices and reconcile manual payment ledger entries."
+    priority: "must"
+    story_ids: ["US-BILL-01", "US-BILL-02", "US-BILL-03", "US-BILL-04", "US-BILL-05"]
+    services: ["invoice_api", "payment_api", "service_api", "customer_api", "whatsapp_link_service", "audit_api", "policy_engine"]
+    guardrails:
+      - "Invoice generation and payment collection are separate events."
+      - "Invoice status is derived from payment total."
+      - "Invoice numbers are race-safe and tenant-scoped."
+
+  - name: commission_inventory
+    purpose: "Manage commission rules, commission records, inventory catalogue, stock movements, and low-stock alerts."
+    priority: "should"
+    story_ids: ["US-COMM-01", "US-COMM-02", "US-COMM-03", "US-INV-01", "US-INV-02", "US-INV-03"]
+    services: ["commission_api", "inventory_api", "invoice_api", "staff_api", "service_api", "audit_api", "policy_engine"]
+    guardrails:
+      - "Commission rules are versioned."
+      - "Commission overrides require reason and audit."
+      - "Stock movements are auditable; no ambiguous auto-deduction."
+
+  - name: whatsapp_workflow
+    purpose: "Generate manual booking and invoice WhatsApp links without paid APIs."
+    priority: "must"
+    story_ids: ["US-WA-01", "US-WA-02"]
+    services: ["whatsapp_link_service", "booking_api", "invoice_api", "customer_api", "audit_api"]
+    guardrails:
+      - "Manual user click only."
+      - "Do not claim delivery status."
+      - "Use deterministic templates and URL encoding."
+
+  - name: audit_compliance
+    purpose: "Audit business writes, enforce override reasons, and protect privacy boundaries."
+    priority: "must"
+    story_ids: ["US-AUD-01", "US-AUD-02"]
+    services: ["audit_api", "policy_engine", "booking_api", "customer_api", "invoice_api", "payment_api", "commission_api", "inventory_api"]
+    guardrails:
+      - "Every important write has an audit event or documented exception."
+      - "Deep medical, skin, and hair diagnostic records are out of scope."
+      - "High-risk changes must preserve before/after context."
+
+  - name: analytics_dashboard
+    purpose: "Provide daily readiness, operational alerts, and date-range reports."
+    priority: "should"
+    story_ids: ["US-DASH-01", "US-DASH-02", "US-RPT-01", "US-RPT-02"]
+    services: ["analytics_api", "booking_api", "invoice_api", "payment_api", "customer_api", "staff_api", "inventory_api", "commission_api"]
+    guardrails:
+      - "Metrics are tenant-scoped."
+      - "Every metric displays date range, source, and freshness where useful."
+      - "No Institute or marketing ROI metrics in Phase 1."
+
+  - name: frontend_ux
+    purpose: "Make the portal usable on mobile, tablet, and desktop with role-aware workflows."
+    priority: "must"
+    story_ids: ["US-SET-01", "US-SET-02"]
+    owns:
+      - "role-aware navigation"
+      - "responsive operational forms"
+      - "English/Malayalam UI dictionary"
+      - "accessibility states"
+    guardrails:
+      - "Internal operations console first."
+      - "No public landing page or Institute navigation."
+      - "No Malayalam mojibake; UI labels must wrap cleanly."
+
+  - name: test_harness
+    purpose: "Prove P0/P1 story acceptance criteria and prevent regression."
+    priority: "must"
+    story_ids: ["ALL-P0", "ALL-P1"]
+    required_test_types:
+      - "unit"
+      - "integration"
+      - "contract"
+      - "audit"
+      - "tenant_isolation"
+      - "role_access"
+      - "privacy"
+      - "ui_regression"
+      - "mojibake"
+    guardrails:
+      - "P0 stories require automated acceptance evidence."
+      - "Tests must not reset non-test databases."
+      - "Docs and code must preserve Institute separation."
+
+  - name: institute_app_handoff
+    purpose: "Document separate Institute app requirements only."
+    priority: "must"
+    story_ids: ["US-SCOPE-01"]
+    outputs:
+      - "separate repository backlog"
+      - "separate PostgreSQL database plan"
+      - "bootstrap checklist outside this repo"
+    guardrails:
+      - "No Institute code, route, API, navigation item, hidden module, or database table in SooryasWeb."
+
+operational_notes:
+  phase_1_build_order:
+    - "requirements_traceability"
+    - "data_model"
+    - "auth_rbac"
+    - "test_harness"
+    - "parlour_operations"
+    - "billing_payments"
+    - "audit_compliance"
+    - "whatsapp_workflow"
+    - "commission_inventory"
+    - "analytics_dashboard"
+    - "frontend_ux"
+  escalation_policy:
+    human_required_for:
+      - "invoice_override"
+      - "commission_override"
+      - "tenant_provisioning_failure"
+      - "policy_violation_high_risk"
+      - "production_schema_change"
+  docs_scope_check:
+    forbidden_in_this_repo:
+      - "Institute route"
+      - "Institute API"
+      - "Institute navigation"
+      - "Institute dashboard widget"
+      - "Institute database table"
+      - "hidden Institute module"
