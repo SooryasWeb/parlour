@@ -1,48 +1,48 @@
 # Production Readiness Register
 
-Date: 5 June 2026
-Scope: SooryasWeb Parlour App, Vercel + Supabase direction
+Date: 6 June 2026  
+Scope: SooryasWeb Parlour App, GoDaddy Node.js beta hosting
 
 ## Current Decision
 
-The production deployment target is the Next.js app under `SooryasWeb/next-app`, not the Git repository root or the legacy `SooryasWeb` root.
+The production deployment target is the root Node.js app under `SooryasWeb`, hosted on GoDaddy Node.js beta with GoDaddy managed MySQL.
 
-The app is closer to preview readiness after the latest hardening pass, but it should not be considered fully production-ready for real customer data until the open gates below are closed.
+The app is suitable for a private preview after GoDaddy deployment succeeds, but it should not be used with real customer data until the open gates below are closed.
 
 ## Closed Gates
 
 | Gate | Status | Evidence |
 |---|---|---|
-| Next production build | Pass | `npm.cmd run build` in `next-app`. |
-| Next typecheck/lint script | Pass | `npm.cmd run lint` maps to `tsc --noEmit`. |
-| Root test suite | Pass | 52 passing tests. |
-| Legacy UI smoke suite | Pass | Playwright covers login/menu visibility, Customer CRM validation/save with WhatsApp consent, staff validation/commission cap, and Generate Bill on desktop and mobile. |
-| PostgreSQL destructive test guard | Pass | Tests require `_test` database suffix. |
-| Transient PostgreSQL retry guard | Pass | Legacy and Next DB modules include bounded retry helpers. |
-| Startup schema compatibility guard | Pass | Legacy and Next DB modules add known missing customer/staff contact columns non-destructively on startup. |
-| Vercel target guard | Pass | Root `vercel.json` removed; docs require Vercel root directory `SooryasWeb/next-app`. |
-| Prototype password login guard | Partial pass | Next password login is blocked in production unless `ALLOW_PASSWORD_LOGIN=true`. |
-| High/critical dependency audit | Pass | Root package clean; `next-app` has no high/critical audit findings. |
+| GoDaddy package metadata | Pass | Root `package.json` has `name`, `version`, `main`, `build`, and `start`. |
+| Port binding | Pass | Server listens on `process.env.PORT || 3000`. |
+| MySQL driver | Pass | `mysql2` is a runtime dependency. |
+| Managed MySQL env vars | Pass | App reads `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD`. |
+| MySQL connection lifecycle | Pass | App uses short-lived `mysql.createConnection` calls and closes connections after each query/transaction. |
+| MySQL schema | Pass | `data/schema.mysql.sql` mirrors the current parlour schema and seed data. |
+| Upload-size hygiene | Pass | `.gitignore` excludes generated artifacts such as `node_modules`, `.next`, test results, reports, and logs. |
+| Static deployment checks | Pass | `tests/godaddy_deploy.test.js` verifies the hosting contract. |
+| Root dependency audit | Pass | `npm.cmd audit --audit-level=high` found 0 vulnerabilities in the root app. |
 
 ## Open Production Gates
 
 | Gate | Required Before Real Data? | Current Status | Next Action |
 |---|---|---|---|
-| Supabase Auth Google provider | Yes | Not implemented. Prototype password login is only gated. | Implement US-AUTH-04 with invite-only approved email mapping. |
-| Migration framework | Yes | `data/schema.sql` is reset-oriented and contains `DROP TABLE`. | Add forward-only migrations before running against live Supabase data. |
-| Coverage target | Yes | 89.16% line coverage; target is approximately 95%. | Add tests for `src/server.js` validation/error/update branches and `src/db.js` retry/config branches. |
-| Full security scan | Yes | Not completed in this pass. | Run a Codex Security repository scan before production launch. |
-| Moderate dependency advisory | Before public launch | `next-app` audit reports moderate PostCSS advisory through Next; no safe npm auto-fix. | Monitor/upgrade Next when a non-breaking patched release is available. |
-| Next browser/device QA | Yes | Legacy UI has automated desktop/mobile Playwright coverage; Next UI browser workflows still need equivalent coverage. | Test mobile/tablet workflows against the running Next app. |
-| Backup/restore drill | Yes | Documented only. | Verify Supabase backup/export and restore before live use. |
+| GoDaddy MySQL smoke test | Yes | Not yet run because GoDaddy database credentials are not available locally. | Deploy with `ALLOW_SCHEMA_INIT=true`, log in, create test customer, generate test bill. |
+| Strong production authentication | Yes | Username/password login exists for private preview. | Harden auth/RBAC before storing real customer data. |
+| Backup/restore drill | Yes | Not verified. | Confirm GoDaddy MySQL backup/export and restore process. |
+| Full DB-backed test run | Yes | Blocked locally while Docker/PostgreSQL is not running. | Re-run `npm.cmd test` when local DB is available or add MySQL CI smoke tests. |
+| Coverage target | Before production hardening signoff | Last measured line coverage was below the 95% target. | Add tests for `src/server.js` edge/error/update branches and DB adapter branches. |
+| Security scan | Yes | Not completed in this pass. | Run a repository security scan before public launch. |
 | GST/legal copy review | Before invoice use | Not completed. | Confirm invoice and consent wording with CA/legal advisor. |
 
 ## Deployment Rule
 
-Do not deploy the repository root to Vercel as the production app. Configure the Vercel project root directory as:
+Deploy only the root Node app:
 
 ```text
-SooryasWeb/next-app
+Root directory: SooryasWeb
+Build command: npm install && npm run build
+Start command: npm start
 ```
 
-Do not set `ALLOW_PASSWORD_LOGIN=true` in production after Google authentication is active.
+Use GoDaddy managed MySQL through `DB_*` environment variables. Do not configure external databases on blocked ports for production.

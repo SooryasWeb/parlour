@@ -20,7 +20,7 @@ Phase 1 focuses on internal readiness:
 - inventory and stock movement;
 - dashboard and reports;
 - manual WhatsApp links;
-- tenant isolation, Supabase Auth Google login, RBAC, audit, and Vercel + Supabase readiness.
+- tenant isolation, secure portal login, RBAC, audit, and GoDaddy Node.js/MySQL readiness.
 
 The following are explicitly out of scope for this repo and Phase 1:
 
@@ -60,7 +60,7 @@ Each story uses this structure:
 | Business value | Prevents anonymous access to customer, staff, and financial records. |
 | Priority | P0 |
 | BRD requirement links | BR-06, FR-TA-01, Section 6.1, US-AUTH-04 |
-| Acceptance criteria | Production login uses the approved Google-authenticated flow; invalid or unauthorized identities show a plain error; session cookie is HTTP-only and signed; unauthenticated users cannot access protected data. |
+| Acceptance criteria | Production login uses approved portal users mapped to tenant and role; invalid or unauthorized identities show a plain error; session cookie is HTTP-only and signed; unauthenticated users cannot access protected data. |
 | Test scenarios | Auth success; auth failure; protected route rejection; session cookie attributes; local password fallback disabled or explicitly limited outside production. |
 | UX/RBAC/audit notes | Login page must be fast and operational, not marketing-led. Username/password should not be the normal production path after US-AUTH-04 is implemented. |
 
@@ -95,22 +95,22 @@ Each story uses this structure:
 Implementation status:
 
 - Partial implementation exists for cross-reference validation: booking creation now rejects customer or staff IDs outside the authenticated tenant, and invoice creation rejects customer IDs outside the authenticated tenant.
-- Current evidence: `tests/api.test.js` seeds a second tenant and proves cross-tenant booking/invoice references are blocked; `tests/next_rewrite.test.js` guards matching tenant ownership checks in the Next rewrite.
+- Current evidence: `tests/api.test.js` seeds a second tenant and proves cross-tenant booking/invoice references are blocked.
 - Remaining work: expand the two-tenant test matrix across every list/get/write path, including inventory, staff, services, audit logs, and future tenant settings.
 
-### US-AUTH-04: Supabase Auth With Google Provider
+### US-AUTH-04: Hardened Production Portal Auth
 
 | Field | Detail |
 |---|---|
 | Epic | Login, session, and RBAC |
 | Role | Owner, manager, receptionist, staff, accountant |
-| User story | As a portal user, I want to register and log in using my Google-authenticated email through Supabase Auth so that SooryasWeb can verify my identity without managing normal production passwords. |
-| Business value | Reduces password risk, improves staff onboarding trust, and aligns authentication with the selected Vercel + Supabase deployment model. |
+| User story | As a portal user, I want secure approved-account login so that SooryasWeb verifies my identity and applies my tenant role correctly. |
+| Business value | Reduces access risk, improves staff onboarding trust, and protects customer and financial records. |
 | Priority | P0 before production cutover |
 | BRD requirement links | BR-06, FR-TA-01, D-16, US-AUTH-01, US-AUTH-02, US-AUTH-03 |
-| Acceptance criteria | Supabase Auth Google provider is the production login path; owner/manager can invite or pre-register a user by email, tenant, and role; login succeeds only when the Google-authenticated email matches an active portal user/invite; no public self-registration creates usable access; disabled users cannot log in; tenant and role are assigned from SooryasWeb records, not trusted directly from Google profile claims; legacy username/password login is removed from production or retained only as an explicitly documented break-glass/development path. |
-| Test scenarios | Supabase Google callback success with invited email; unknown Google email rejection; email mismatch rejection; disabled user rejection; tenant assignment test; role-menu test after Google login; session cookie security test; audit events for invite creation, first login, login rejection, role change, and user disable. |
-| UX/RBAC/audit notes | Login copy should say "Continue with Google." Registration should feel invite-only, not public signup. The app should request only minimal Google scopes: `openid`, `email`, and `profile`. WhatsApp login is out of scope. |
+| Acceptance criteria | Owner/manager can pre-register or approve a user by identity, tenant, and role; login succeeds only for active approved users; no public self-registration creates usable access; disabled users cannot log in; tenant and role are assigned from SooryasWeb records; session cookie is HTTP-only, signed, and secure in production. |
+| Test scenarios | Approved user login; unknown user rejection; disabled user rejection; tenant assignment test; role-menu test after login; session cookie security test; audit events for user creation, first login, login rejection, role change, and user disable. |
+| UX/RBAC/audit notes | Registration should feel invite-only, not public signup. WhatsApp login is out of scope. |
 
 ### US-DASH-01: Daily Readiness Dashboard
 
@@ -553,7 +553,7 @@ Implementation status:
 Implementation status:
 
 - Partial implementation exists for core Phase 1 write paths: customer create/update, booking create/update, invoice create, payment record, booking completion through paid invoice, commission calculation audit, staff creation, service creation, and inventory item creation.
-- Current evidence: `tests/api.test.js` verifies tenant-scoped audit rows for customer, booking, invoice, payment, booking completion, staff creation, service creation, and inventory item creation; `tests/next_rewrite.test.js` guards matching audit hooks in the Next rewrite.
+- Current evidence: `tests/api.test.js` verifies tenant-scoped audit rows for customer, booking, invoice, payment, booking completion, staff creation, service creation, and inventory item creation.
 - Remaining work: extend audit coverage to tenant settings, commission overrides, role changes, inventory adjustments/stock movements, and every future write path.
 
 ### US-AUD-02: Privacy Boundary For Notes
@@ -570,17 +570,17 @@ Implementation status:
 | Test scenarios | Static field scan; role-limited notes; policy validation; UI copy review. |
 | UX/RBAC/audit notes | Store "allergies mentioned by customer" only as operational notes until policy review. |
 
-### US-DEP-01: Vercel And Supabase Preview Readiness
+### US-DEP-01: GoDaddy Node.js Preview Readiness
 
 | Field | Detail |
 |---|---|
 | Epic | Deployment/admin readiness |
 | Role | Platform owner or developer |
-| User story | As the platform owner, I want a Vercel + Supabase preview deployment checklist so that the app can be tested cheaply before production use. |
+| User story | As the platform owner, I want a GoDaddy Node.js preview deployment checklist so that the app can be tested before production use. |
 | Business value | Supports the chosen free-tier hosting path for a low-usage Phase 1 portal. |
 | Priority | P0 |
 | BRD requirement links | D-16, deployment direction |
-| Acceptance criteria | Deployment docs specify Vercel env vars, Supabase transaction pooler, schema/migration warning, SESSION_SECRET, test DB separation, and smoke-test steps. |
+| Acceptance criteria | Deployment docs specify GoDaddy root directory, build/start commands, `SESSION_SECRET`, managed MySQL `DB_*` variables, first-deploy schema initialization, upload exclusions, and smoke-test steps. |
 | Test scenarios | Build check; typecheck; deployment env checklist review; preview smoke test. |
 | UX/RBAC/audit notes | Do not expose real customer data until production hardening gates pass. |
 
@@ -590,7 +590,7 @@ Implementation status:
 |---|---|
 | Epic | Deployment/admin readiness |
 | Role | Developer |
-| User story | As a developer, I want destructive test resets blocked unless the configured database name ends with `_test` so that live Supabase data cannot be reset by tests. |
+| User story | As a developer, I want destructive test resets blocked unless the configured database name ends with `_test` so that live data cannot be reset by tests. |
 | Business value | Protects production data during local and CI test runs. |
 | Priority | P0 |
 | BRD requirement links | D-14, deployment safety |
@@ -633,7 +633,7 @@ Implementation status:
 | FR-INV-* | US-INV-01, US-INV-02, US-INV-03 |
 | Analytics dashboards | US-DASH-01, US-DASH-02, US-RPT-01, US-RPT-02 |
 | Bilingual interface | US-SET-02 |
-| Vercel + Supabase readiness | US-AUTH-04, US-DEP-01, US-DEP-02 |
+| GoDaddy Node.js readiness | US-AUTH-04, US-DEP-01, US-DEP-02 |
 
 ## 5. Build Priority
 

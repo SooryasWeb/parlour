@@ -48,7 +48,7 @@ Each service/workstream must define:
 |---|---|---|---|
 | Requirements Traceability | Keeps BRD, user stories, execution map, and tests aligned. | Must | US-SCOPE-01 |
 | Data Model | Owns schema, migrations, seeds, tenant scope, and destructive-test guard. | Must | US-AUTH-03, US-DEP-02 |
-| Auth/RBAC | Owns Supabase Google login, sessions, role matrix, route guards, menu permissions. | Must | US-AUTH-01, US-AUTH-02, US-AUTH-04 |
+| Auth/RBAC | Owns secure portal login, sessions, role matrix, route guards, menu permissions. | Must | US-AUTH-01, US-AUTH-02, US-AUTH-04 |
 | Parlour Operations | Owns bookings, day agenda, customers, services, staff, chairs. | Must | US-BK-01..04, US-CRM-01..03, US-SVC-01..03 |
 | Billing & Payments | Owns invoices, invoice numbers, payment ledger, reconciliation. | Must | US-BILL-01..05 |
 | Commission & Inventory | Owns commission rules, commission records, stock catalogue, stock movements. | Should | US-COMM-01..03, US-INV-01..03 |
@@ -87,12 +87,12 @@ Each service/workstream must define:
 
 | Field | Spec |
 |---|---|
-| Purpose | Protect the portal through Supabase Auth with Google provider and restrict actions by role. |
-| Inputs | Supabase authenticated user, Google-authenticated email, approved portal user/invite, session cookie, route/API action, user role. |
+| Purpose | Protect the portal through approved-account authentication and restrict actions by role. |
+| Inputs | Authenticated portal user, approved portal user record, session cookie, route/API action, user role. |
 | Outputs | Authenticated user context, tenant/role mapping, allowed menu items, allowed API actions. |
 | Policies | Production auth uses invite-only approved Google emails; HTTP-only signed cookies; shared RBAC helper for UI and API; no client-side-only authorization; no public self-registration into usable access. |
 | Failure modes | Role bypass, unauthorized Google account access, email mismatch, weak session, stale menu permissions. |
-| Tests | Supabase Google callback tests; invite-only email tests; login tests; role matrix tests; forbidden API tests; menu visibility tests. |
+| Tests | Approved-user login tests; disabled-user tests; login tests; role matrix tests; forbidden API tests; menu visibility tests. |
 
 ### 5.4 Parlour Operations
 

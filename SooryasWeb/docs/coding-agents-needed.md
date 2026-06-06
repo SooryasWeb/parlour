@@ -17,7 +17,7 @@ Each coding agent must take its implementation scope from story IDs in `docs/use
 |---|---|---|
 | Requirements Traceability Agent | `docs/BRD.md`, specs, acceptance criteria | Converts BRD requirements into implementation tickets and testable acceptance criteria. |
 | Data Model Agent | database schema, migrations, seed data | Designs durable parlour entities for tenants, customers, bookings, invoices, payments, staff, commissions, inventory, and audit logs. |
-| Auth/RBAC Agent | Supabase Google auth, roles, permissions, protected routes | Required before real customer, staff, and billing data is used. |
+| Auth/RBAC Agent | Secure portal auth, roles, permissions, protected routes | Required before real customer, staff, and billing data is used. |
 | Parlour Operations Agent | bookings, CRM, services, staff availability | Builds the core daily parlour workflow. |
 | Billing & Payments Agent | invoices, invoice numbering, payment ledger, reconciliation | Handles the money discipline requirement. |
 | Commission & Inventory Agent | staff commissions, stock movements, low-stock alerts | Covers two operational risk areas that are mandatory in the BRD. |
@@ -101,7 +101,7 @@ Must include:
 
 Deliverables:
 
-- Supabase Auth with Google provider design;
+- approved-account production auth design;
 - invite-only approved email mapping;
 - login/session design;
 - roles and permissions;

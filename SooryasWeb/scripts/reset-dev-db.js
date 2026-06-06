@@ -4,10 +4,6 @@ import { fileURLToPath } from 'node:url';
 
 const { Pool } = pg;
 
-if (process.env.DATABASE_URL) {
-  throw new Error('Refusing to reset a DATABASE_URL connection. Use this script only for local docker-compose development.');
-}
-
 const targetDatabase = process.env.PGDATABASE || 'sooryas_parlour_dev';
 if (!/^[a-zA-Z0-9_]+$/.test(targetDatabase) || !targetDatabase.endsWith('_dev')) {
   throw new Error(`Refusing to reset database "${targetDatabase}". Local dev resets require a database name ending with "_dev".`);

@@ -28,7 +28,7 @@ Keep the Institute app out of navigation. Do not add admissions, batches, traine
 
 ### Login
 
-- Production login should show brand, tenant context, and one primary "Continue with Google" action for invited users.
+- Production login should show brand, tenant context, and a clear sign-in action for approved portal users.
 - Any username/password fields should be visually secondary and clearly labelled as local or break-glass fallback only.
 - Keep error messages plain and local to the form, including unauthorized Google email, disabled user, callback failure, and local fallback failures.
 - Avoid marketing language; staff need speed and confidence.

@@ -77,7 +77,7 @@ shared_services:
     description: "Evaluate tenant scope, role permissions, workflow rules, and privacy guardrails."
     operations: ["check", "authorize", "validate"]
   auth_service:
-    description: "Map Supabase Auth Google identities to approved tenant users, roles, and app sessions."
+    description: "Map approved portal identities to tenant users, roles, and app sessions."
     operations: ["google_callback", "resolve_user", "create_invite", "disable_user", "audit_auth_event"]
 
 workstreams:
@@ -105,12 +105,12 @@ workstreams:
       - "Use migrations for deployment; do not run reset SQL against live data."
 
   - name: auth_rbac
-    purpose: "Protect Supabase Google sessions, API actions, and role-aware navigation."
+    purpose: "Protect portal sessions, API actions, and role-aware navigation."
     priority: "must"
     story_ids: ["US-AUTH-01", "US-AUTH-02", "US-AUTH-04"]
     services: ["auth_service", "policy_engine", "audit_api"]
     guardrails:
-      - "Production login uses Supabase Auth with Google provider."
+      - "Production login uses approved portal user records mapped to tenant and role."
       - "Only active approved user/invite emails can receive usable portal access."
       - "Signed HTTP-only session cookies where app sessions are used."
       - "UI permissions and API permissions use the same policy model."

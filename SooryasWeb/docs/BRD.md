@@ -37,7 +37,7 @@ By managing parlour operations and institute trainee metrics in structured datab
 1. Build a repeatable, tenant-aware parlour operating system under `lifefil.ai`.
 2. Support future white-label parlour tenants with subdomain routing, tenant-specific logos, and strict data isolation.
 3. Establish a low-cost introductory pricing model of **Rs. 499/month** for future parlour tenants.
-4. Maintain a foundation-first build sequence: requirements traceability, tenant-aware PostgreSQL data model, Supabase Auth with Google provider, RBAC, and a comprehensive test harness before feature delivery.
+4. Maintain a foundation-first build sequence: requirements traceability, tenant-aware MySQL-compatible data model, RBAC, deployment safety, and a comprehensive test harness before feature delivery.
 
 ### 3.2 Sooryas Parlour Tenant Objectives
 1. Run daily parlour workflows smoothly across mobile, tablet, and desktop.
@@ -59,7 +59,7 @@ By managing parlour operations and institute trainee metrics in structured datab
 
 ### 4.1 In Scope: SooryasWeb Parlour App (Phase 1)
 - **Tenant-Aware Schema:** Database structure contains `tenant_id` on all relevant tables to ensure logical data isolation and future scaling.
-- **Production Authentication:** Staff and tenant users authenticate through Supabase Auth with Google provider. Usable portal access is invite-only by approved email, tenant, and role.
+- **Production Authentication:** Staff and tenant users authenticate through approved portal accounts mapped to tenant and role. The current username/password flow is private-preview only and must be hardened before real customer data is used.
 - **Staff-Managed Bookings:** Appointment scheduling, rescheduling, cancellations, and status tracking (pending, confirmed, completed, cancelled, no-show).
 - **Double-Booking Prevention:** Conflict detection logic checks both staff availability and chair/station availability.
 - **Customer CRM:** Contact information, tags, service history, preferences, and basic consent/interaction notes.
@@ -98,13 +98,13 @@ By managing parlour operations and institute trainee metrics in structured datab
 ### 5.1 Project & Database Separation
 The Parlour and Institute systems are completely decoupled:
 - **Repositories:** Two distinct Git repositories.
-- **Databases:** Two separate PostgreSQL databases.
+- **Databases:** Two separate databases.
 - **Deployments:** Deployed as separate web applications.
 - **Reasoning:** Ensures complete data isolation, keeps the tenant parlour codebase lightweight, and maintains the privacy of Sooryas training operations.
 
 ### 5.2 Database Environment
-- **Development:** Local PostgreSQL running via Docker on Windows.
-- **Production:** Independent PostgreSQL databases running on a Linux-based production server.
+- **Development:** Local PostgreSQL running via Docker on Windows for the current test harness.
+- **Production:** GoDaddy managed MySQL for the parlour app.
 
 ### 5.3 Tenant Model (Parlour App)
 - Subdomains (e.g., `sooryas.lifefil.ai`, `rosebeauty.lifefil.ai`) route to tenant contexts.
@@ -143,8 +143,8 @@ The Parlour and Institute systems are completely decoupled:
 | **BR-03** | Invoices must be generated for all completed services; payment collection and invoicing are separate steps. |
 | **BR-04** | GST details are optional and configurable; invoices function with or without GST fields populated. |
 | **BR-05** | Customer CRM notes must be limited to basic interaction and preference logs. Deep skin, hair, and medical history tracking is locked pending legal review. |
-| **BR-06** | Parlour database tables must contain a `tenant_id` column to enforce strict data isolation between tenants, and production access must map Google-authenticated Supabase users to approved tenant roles. |
-| **BR-07** | The Parlour app and the Institute app must remain completely decoupled, running in separate repositories and using separate PostgreSQL databases. |
+| **BR-06** | Parlour database tables must contain a `tenant_id` column to enforce strict data isolation between tenants, and production access must map authenticated portal users to approved tenant roles. |
+| **BR-07** | The Parlour app and the Institute app must remain completely decoupled, running in separate repositories and using separate databases. |
 | **BR-08** | WhatsApp workflows must use free manual links (`wa.me`) or equivalent free mechanisms. Paid message templates or APIs are out of scope. |
 | **BR-09** | Staff commission rules must be versioned, and manual overrides must generate an audit log. |
 | **BR-10** | Trainee certificates can only be generated when all eligibility rules (attendance, fees paid, assessment completion) are met. |
@@ -157,7 +157,7 @@ The Parlour and Institute systems are completely decoupled:
 - **FR-TA-01:** System separates tenant data using a tenant-aware database schema (`tenant_id` filtering).
 - **FR-TA-02:** Platform administrators can onboard new parlour tenants, assign subdomains, and set active/inactive status.
 - **FR-TA-03:** Parlour tenants can upload their own logo and configure address, contact details, and optional GSTIN.
-- **FR-TA-04:** Production authentication uses Supabase Auth with Google provider. Portal users must be invited or pre-registered by approved email, tenant, and role before login grants usable access.
+- **FR-TA-04:** Production authentication must use approved portal users mapped to tenant and role. Public self-registration must not grant usable portal access.
 
 ### 8.2 Parlour Bookings
 - **FR-BK-01:** Staff can create, view, edit, reschedule, and cancel bookings.
@@ -249,7 +249,7 @@ graph TD
 ```
 
 ### Phase 1: Sooryas Internal Parlour MVP & Separate Institute App
-- **Parlour App:** Build local dev environment using Docker and PostgreSQL. Establish Auth/RBAC, calendar scheduling, conflict detection (staff + chair), invoice logging, payment ledger, basic inventory, and manual WhatsApp redirect links.
+- **Parlour App:** Build local dev environment, deploy to GoDaddy Node.js with managed MySQL, and establish Auth/RBAC, calendar scheduling, conflict detection (staff + chair), invoice logging, payment ledger, basic inventory, and manual WhatsApp redirect links.
 - **Institute App:** Setup a separate repository and database. Build the public admissions landing page, enquiry log, fee ledger, and trainee tracking.
 
 ### Phase 2: Sooryas Operational Depth
@@ -272,12 +272,12 @@ graph TD
 All project ambiguities have been resolved by the owner as follows:
 - **D-01 (Document Authority):** `BRD.md` is consolidated as the single source of truth. `PRODUCT_BRD.md` and `business-requirements-document.md` are removed.
 - **D-02 (Build Order):** Foundation-first build sequence (traceability -> database model -> auth -> test harness -> feature execution).
-- **D-03 (Database):** PostgreSQL database used for both apps.
+- **D-03 (Database):** GoDaddy managed MySQL is the production database for the parlour app; the Institute app keeps its own separate database.
 - **D-04 (Database Architecture):** Decoupled databases: Parlour and Institute have completely separate databases.
 - **D-05 (Codebase):** Two separate Git repositories: one for the parlour app (evolved from this repo) and one for the institute app.
 - **D-06 (Multi-tenancytiming):** Parlour schema is tenant-aware from day 1 (`tenant_id`), but multi-tenancy deployment is deferred.
 - **D-07 (Bilingual UI):** Language toggle for UI (English/Malayalam) with single Unicode text fields in the database.
-- **D-08 (Development Env):** PostgreSQL running locally on Docker for Windows.
+- **D-08 (Development Env):** PostgreSQL currently runs locally on Docker for the existing test harness; production uses GoDaddy managed MySQL.
 - **D-09 (Certificate Verification):** Certificates must support both a QR code and lookup code.
 - **D-10 (Booking Conflicts):** Conflict checking must validate both staff availability and chair/station availability.
 - **D-11 (WhatsApp Integrations):** Restricted to free manual WhatsApp links (`wa.me`) in Phase 1.
