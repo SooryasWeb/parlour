@@ -5,7 +5,7 @@ Scope: SooryasWeb Parlour App, Vercel + Supabase direction
 
 ## Current Decision
 
-The production deployment target is the Next.js app under `next-app`, not the legacy repository root.
+The production deployment target is the Next.js app under `SooryasWeb/next-app`, not the Git repository root or the legacy `SooryasWeb` root.
 
 The app is closer to preview readiness after the latest hardening pass, but it should not be considered fully production-ready for real customer data until the open gates below are closed.
 
@@ -20,7 +20,7 @@ The app is closer to preview readiness after the latest hardening pass, but it s
 | PostgreSQL destructive test guard | Pass | Tests require `_test` database suffix. |
 | Transient PostgreSQL retry guard | Pass | Legacy and Next DB modules include bounded retry helpers. |
 | Startup schema compatibility guard | Pass | Legacy and Next DB modules add known missing customer/staff contact columns non-destructively on startup. |
-| Vercel target guard | Pass | Root `vercel.json` removed; docs require Vercel root directory `next-app`. |
+| Vercel target guard | Pass | Root `vercel.json` removed; docs require Vercel root directory `SooryasWeb/next-app`. |
 | Prototype password login guard | Partial pass | Next password login is blocked in production unless `ALLOW_PASSWORD_LOGIN=true`. |
 | High/critical dependency audit | Pass | Root package clean; `next-app` has no high/critical audit findings. |
 
@@ -42,7 +42,7 @@ The app is closer to preview readiness after the latest hardening pass, but it s
 Do not deploy the repository root to Vercel as the production app. Configure the Vercel project root directory as:
 
 ```text
-next-app
+SooryasWeb/next-app
 ```
 
 Do not set `ALLOW_PASSWORD_LOGIN=true` in production after Google authentication is active.

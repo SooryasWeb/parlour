@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "description": "Next.js rewrite of SooryasWeb Parlour App for Vercel and Supabase.",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

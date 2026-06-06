@@ -94,7 +94,7 @@ This is still not final production architecture, but it is closer to the BRD dir
 
 The current app uses PostgreSQL. Local development expects a Postgres database matching `docker-compose.yml`.
 
-For free-tier hosting, deploy the Next.js app to Vercel with the Vercel project root directory set to `next-app`, then connect it to Supabase PostgreSQL with `DATABASE_URL`. Use the Supabase **Transaction pooler** connection string for Vercel serverless functions.
+For free-tier hosting, deploy the Next.js app to Vercel with the Vercel project root directory set to `SooryasWeb/next-app`, then connect it to Supabase PostgreSQL with `DATABASE_URL`. Use the Supabase **Transaction pooler** connection string for Vercel serverless functions.
 
 The legacy JSON file under `data/sooryas-db.json` is historical prototype data and should not be treated as the active store.
 
@@ -128,7 +128,7 @@ This deletes local development data in `sooryas_parlour_dev`. The reset script r
 
 ## Production Direction
 
-Recommended deployment direction for `lifefil.ai` is documented in [Deployment](docs/deployment.md). Deploy from `next-app`, not the legacy repository root. Do not expose real customer data until Supabase Google authentication, RBAC, durable database storage, audit logs, and privacy controls are production-hardened.
+Recommended deployment direction for `lifefil.ai` is documented in [Deployment](docs/deployment.md). Deploy from `SooryasWeb/next-app`, not the repository root or legacy `SooryasWeb` root. Do not expose real customer data until Supabase Google authentication, RBAC, durable database storage, audit logs, and privacy controls are production-hardened.
 
 Recommended internal URL:
 

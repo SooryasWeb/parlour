@@ -33,7 +33,7 @@ flowchart LR
   Vercel --> Supabase["Supabase PostgreSQL - Mumbai"]
 ```
 
-Use Vercel for the Next.js app and API routes. In Vercel, set the Vercel project root directory to `next-app`; do not deploy the legacy repository root as the production app. Use Supabase for PostgreSQL. In the Supabase dashboard, copy the **Transaction pooler** connection string, not the direct connection string, because Vercel functions are serverless and use short-lived connections.
+Use Vercel for the Next.js app and API routes. In Vercel, set the Vercel project root directory to `SooryasWeb/next-app` because this Git repository contains the app inside the `SooryasWeb` folder. Do not deploy the legacy repository root or the `SooryasWeb` root as the production app. Use Supabase for PostgreSQL. In the Supabase dashboard, copy the **Transaction pooler** connection string, not the direct connection string, because Vercel functions are serverless and use short-lived connections.
 
 Set this Vercel environment variable:
 
@@ -41,16 +41,23 @@ Set this Vercel environment variable:
 DATABASE_URL=postgres://postgres.<project-ref>:<password>@aws-0-ap-south-1.pooler.supabase.com:6543/postgres?sslmode=require
 ```
 
-Also set:
+For the current private preview, also set:
 
 ```text
 PGPOOL_MAX=1
-NODE_ENV=production
 SESSION_SECRET=<long random value>
+ALLOW_PASSWORD_LOGIN=true
+```
+
+For the later Supabase Google authentication implementation, also set these before enabling real users:
+
+```text
 NEXT_PUBLIC_SUPABASE_URL=<supabase-project-url>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<supabase-anon-key>
 SUPABASE_SERVICE_ROLE_KEY=<server-only-service-role-key>
 ```
+
+Vercel sets `NODE_ENV=production` automatically. `ALLOW_PASSWORD_LOGIN=true` is only a temporary preview/internal-pilot setting until Supabase Google authentication is implemented. Remove it before handling real customer data.
 
 Configure Supabase Auth with Google provider before production preview:
 
